@@ -2,7 +2,7 @@ import FormModal from '@/components/FormModal'
 import Pagination from '@/components/Pagination'
 import Table from '@/components/Table'
 import TableSearch from '@/components/TableSearch'
-import { classesData, examsData, lessonsData, role, subjectsData } from '@/lib/data'
+import { currentUserId, role } from '@/lib/utils'
 import prisma from '@/lib/prisma'
 import { ITEM_PER_PAGE } from '@/lib/settings'
 import { Class, Exam, Prisma, Subject, Teacher } from '@prisma/client'
@@ -37,10 +37,10 @@ const columns =[
     className:"hidden md:table-cell"
   },
       
-  {
+  ...(role ==="admin" || role==="teacher" ? [{
     header:"Actions",
-    accessor:"action"
-  }
+    accessor:"action",
+  }]:[]),
 ];
 
 const renderRow = (item: ExamList) =>(
@@ -109,6 +109,24 @@ const query: Prisma.ExamWhereInput = {};
   }
 }
 
+// ROLE BASED CONDITION
+
+switch(role){
+  case "admin":
+    break;
+  case "teacher":
+    query.lesson.teacherId = currentUserId!;
+    break;  
+  case "student":
+    query.lesson.class = {students:{some:{id:currentUserId!}}};
+    break;
+  case "parent":
+    query.lesson.class = {students:{some:{parentId:currentUserId!}}};
+    break;
+  default:
+    break;
+}
+
 
   const [data,count] = await prisma.$transaction([
   prisma.exam.findMany({
@@ -144,7 +162,7 @@ prisma.exam.count({where:query}),
             <button className='w-8 h-8 flex items-center justify-center rounded-full bg-kunuYellow'>
               <Image src="/sort.png" alt="" width={14} height={14}/>
             </button>
-            {role === "admin" && (
+            {(role === "admin"  || role==="teacher") && (
             // <button className='w-8 h-8 flex items-center justify-center rounded-full bg-kunuYellow'>
             //   <Image src="/plus.png" alt="" width={14} height={14}/>
             // </button>

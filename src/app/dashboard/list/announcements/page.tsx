@@ -2,13 +2,14 @@ import FormModal from '@/components/FormModal'
 import Pagination from '@/components/Pagination'
 import Table from '@/components/Table'
 import TableSearch from '@/components/TableSearch'
-import {  announcementsData, role, } from '@/lib/data'
+
 import prisma from '@/lib/prisma'
 import { ITEM_PER_PAGE } from '@/lib/settings'
+import { currentUserId, role } from '@/lib/utils'
 import { Announcement, Class, Prisma } from '@prisma/client'
 import Image from 'next/image'
-import Link from 'next/link'
 import React from 'react'
+
 
 
 type AnnouncementList = Announcement & {class:Class};
@@ -29,10 +30,10 @@ const columns =[
     className:"hidden md:table-cell"
   },
       
-  {
+  ...(role ==="admin" ? [{
     header:"Actions",
-    accessor:"action"
-  }
+    accessor:"action",
+  }]:[]),
 ];
 
 const renderRow = (item: AnnouncementList) =>(
@@ -40,7 +41,7 @@ const renderRow = (item: AnnouncementList) =>(
     <td className='flex items-center gap-4 p-4'>
        {item.title}
     </td>
-    <td>{item.class.name}</td>
+    <td>{item.class.name || "-"}</td>
     <td className="hidden md:table-cell">
         {new Intl.DateTimeFormat("en-US").format(item.date)}
       </td>
@@ -90,18 +91,28 @@ if(queryParams){
   }
 }
 
+// ROLE BASED CONDITION
+
+const roleConditions={
+  teacher:{lessons:{some:{teacherId:currentUserId!}}},
+  student:{students:{some:{id:currentUserId!}}},
+  parent:{students:{some:{parentId:currentUserId!}}},
+};
+
+query.OR=[{classId:null},{
+  class:roleConditions[role as keyof typeof roleConditions] ||{},
+},];
+
 
   const [data,count] = await prisma.$transaction([
   prisma.announcement.findMany({
-     where:query,
-    //   lessons:{
-    //     some:{classId:parseInt(queryParams.classId!)}
-    //   }
-    // },
-    include:{
-      
-      class:true
-    },
+    
+    where:query,
+    
+      include:{
+        
+        class:true
+      },
     take:ITEM_PER_PAGE,
     skip:ITEM_PER_PAGE*(p-1)
   }),

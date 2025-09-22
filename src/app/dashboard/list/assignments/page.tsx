@@ -2,13 +2,15 @@ import FormModal from '@/components/FormModal'
 import Pagination from '@/components/Pagination'
 import Table from '@/components/Table'
 import TableSearch from '@/components/TableSearch'
-import { assignmentsData, classesData, examsData, lessonsData, role, subjectsData } from '@/lib/data'
 import prisma from '@/lib/prisma'
 import { ITEM_PER_PAGE } from '@/lib/settings'
+import { currentUserId, role } from '@/lib/utils'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { Assignment, Class, Prisma, Subject, Teacher } from '@prisma/client'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+
 
 
 type AssignmentList = Assignment & {
@@ -39,11 +41,12 @@ const columns =[
     className:"hidden md:table-cell"
   },
       
-  {
+  ...(role ==="admin" ? [{
     header:"Actions",
-    accessor:"action"
-  }
+    accessor:"action",
+  }]:[]),
 ];
+
 
 const renderRow = (item: AssignmentList) =>(
   <tr key={item.id} className='border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-kunuPurpleLight'>
@@ -63,7 +66,7 @@ const renderRow = (item: AssignmentList) =>(
           <Image src="/edit.png" alt='' width={16} height={16}></Image>
         </button>
         </Link> */}
-        {role === "admin" && (
+        {(role === "admin" || role === "teacher") && (
         // <button className='w-7 h-7 flex items-center justify-center rounded-full bg-kunuPurple'>
         //   <Image src="/delete.png" alt='' width={16} height={16}></Image>
         // </button>
@@ -85,6 +88,8 @@ const p= page ? parseInt(page):1;
 
 // URL PARAMS CONDITION
 const query: Prisma.AssignmentWhereInput = {};
+
+query.lesson = {};
 
   query.lesson = {};
   if (queryParams) {
@@ -109,6 +114,22 @@ const query: Prisma.AssignmentWhereInput = {};
   }
 }
 
+// ROLE CONDITION 
+
+switch(role){
+  case "admin":
+    break;
+  case "teacher":
+    query.lesson.teacherId = currentUserId!;
+    break;
+  case "student":
+    query.lesson.class ={
+      students: { some: { id: currentUserId! } },
+    };
+    break;
+  default: 
+    break;
+}
 
   const [data,count] = await prisma.$transaction([
   prisma.assignment.findMany({

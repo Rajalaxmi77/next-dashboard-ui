@@ -2,13 +2,14 @@ import FormModal from '@/components/FormModal'
 import Pagination from '@/components/Pagination'
 import Table from '@/components/Table'
 import TableSearch from '@/components/TableSearch'
-import {  role, subjectsData } from '@/lib/data'
+import { currentUserId, role } from '@/lib/utils'
 import prisma from '@/lib/prisma'
 import { ITEM_PER_PAGE } from '@/lib/settings'
 import { Class,Event, Prisma } from '@prisma/client'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import { de } from 'zod/locales'
 
 
 type EventList= Event & {class:Class};
@@ -40,10 +41,11 @@ const columns =[
     className:"hidden md:table-cell"
   },
       
-  {
+  ...(role ==="admin" ? [{
     header:"Actions",
-    accessor:"action"
-  }
+    accessor:"action",
+  }]:[]),
+
 ];
 
 const renderRow = (item: EventList) =>(
@@ -116,15 +118,22 @@ if(queryParams){
   }
 }
 
+// ROLE BASED CONDITION
+
+const roleConditions={
+  teacher:{lessons:{some:{teacherId:currentUserId!}}},
+  student:{students:{some:{id:currentUserId!}}},
+  parent:{students:{some:{parentId:currentUserId!}}},
+};
+
+query.OR=[{classId:null},{
+  class:roleConditions[role as keyof typeof roleConditions] ||{},
+},];
 
   const [data,count] = await prisma.$transaction([
   prisma.event.findMany({
      where:query,
-    //   lessons:{
-    //     some:{classId:parseInt(queryParams.classId!)}
-    //   }
-    // },
-    include:{
+        include:{           
       
       class:true
     },
