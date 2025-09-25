@@ -1,18 +1,52 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import TeacherForm from "./forms/TeacherForm";
-import StudentForm from "./forms/StudentForm";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import ParentForm from "./forms/ParentForm";
+import dynamic from "next/dynamic";
+ import { deleteSubject } from "@/lib/action";
+import { useFormState } from "react-dom";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 
+const deleteActionMap = {
+  subject: deleteSubject,
+  class: deleteSubject,
+  teacher: deleteSubject,
+  student: deleteSubject,
+  parent: deleteSubject,
+  lesson: deleteSubject,
+  exam: deleteSubject,
+  assignment: deleteSubject,
+  result: deleteSubject,
+  attendance: deleteSubject,
+  event: deleteSubject,
+  announcement: deleteSubject,
+  // Add other mappings as needed
+};
+
+// USE LAZY LOADING
+
+// import TeacherForm from "./forms/TeacherForm";
+// import StudentForm from "./forms/StudentForm";
+
+const TeacherForm = dynamic(() => import("./forms/TeacherForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const StudentForm = dynamic(() => import("./forms/StudentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 const forms: {
-  [key: string]: (type: "create" | "update", data?: any) => JSX.Element;
+  [key: string]: (setOpen:Dispatch<SetStateAction<boolean>>, type: "create" | "update", data?: any) => JSX.Element;
 } = {
-  teacher: (type, data) => <TeacherForm type={type} data={data} />,
-  student: (type, data) => <StudentForm type={type} data={data} />,
-  parent: (type, data) => <ParentForm type={type} data={data} />
+  teacher: (type, data,setOpen) => <TeacherForm type={type} data={data} setOpen={setOpen} />,
+  student: (type, data,setOpen) => <StudentForm type={type} data={data} setOpen={setOpen}/>,
+  parent: (type, data,setOpen) => <ParentForm type={type} data={data} setOpen={setOpen}/>,
+  subject: (setOpen,type, data) => <SubjectForm type={type} data={data} setOpen={setOpen}/>
 };
 const FormModal = ({table,type,data,id}:{
     table:
@@ -40,38 +74,28 @@ const FormModal = ({table,type,data,id}:{
       ? "bg-kunuSky"
       : "bg-kunuPurple";
       
-  const [open,setOpen]=useState(false);
+  const [open,setOpen]=useState(false); 
+
+  
+  const Form = () => {
+
+    const [state,formAction]=useFormState(deleteActionMap[table],{success:false,error:false});
+
+    const router = useRouter();
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+    if (state.success) {
+      toast(`Subject has been deleted!`);
+      setOpen(false);
+      router.refresh();
+     
     }
-  }, [open]);
+  }, [state.success,router]);
 
-  // const Form = () => {
-  //   return type === "delete" && id ? (
-  //     <form action="" className="p-4 flex flex-col gap-4">
-  //       <span className="text-center font-medium">
-  //         All data will be lost. Are you sure you want to delete this {table}?
-  //       </span>
-  //       <button className="bg-red-700 text-white py-2 px-4 rounded-md border-none w-max self-center">
-  //         Delete
-  //       </button>
-  //     </form>
-  //   ) : type === "create" || type === "update" ? (
-  //      forms[table](type, data)
-  //   ) : (
-  //     "Form not found!"
-  //   );
-  // };
-
-  const Form = () => {
-    const FormComponent = forms[table];
-  
+   
     return type === "delete" && id ? (
-      <form action="" className="p-4 flex flex-col gap-4">
+      <form action={formAction} className="p-4 flex flex-col gap-4">
+        <input type="text | number" name="id" value={id} hidden />
         <span className="text-center font-medium">
           All data will be lost. Are you sure you want to delete this {table}?
         </span>
@@ -80,7 +104,7 @@ const FormModal = ({table,type,data,id}:{
         </button>
       </form>
     ) : type === "create" || type === "update" ? (
-      FormComponent ? FormComponent(type, data) : "Form not found!"
+      forms[table](setOpen, type, data)
     ) : (
       "Form not found!"
     );
