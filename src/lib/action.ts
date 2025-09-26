@@ -13,6 +13,9 @@ export const createSubject = async (currentState:CurrentState,data:SubjectSchema
         await prisma.subject.create({
             data:{
                 name:data.name,
+                teachers: {
+                    connect: data.teachers.map((teacherId) => ({ id: teacherId })),
+                  },
             }
         });
         // revalidatePath("/dashboard/list/subjects");
@@ -30,6 +33,9 @@ export const updateSubject = async (currentState:CurrentState,data:SubjectSchema
             where:{id:data.id},
             data:{
                 name:data.name,
+                teachers: {
+                    set: data.teachers.map((teacherId) => ({ id: teacherId })),
+                },
             }
         });
         // revalidatePath("/dashboard/list/subjects");
