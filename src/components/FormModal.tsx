@@ -3,17 +3,18 @@ import Image from "next/image";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import ParentForm from "./forms/ParentForm";
 import dynamic from "next/dynamic";
- import { deleteSubject } from "@/lib/action";
+ import {  deleteSubject,deleteClass, deleteTeacher } from "@/lib/action";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { FormContainerProps } from "./FormContainer";
 
 
+
 const deleteActionMap = {
   subject: deleteSubject,
-  class: deleteSubject,
-  teacher: deleteSubject,
+  class: deleteClass,
+  teacher: deleteTeacher,
   student: deleteSubject,
   parent: deleteSubject,
   lesson: deleteSubject,
@@ -23,7 +24,7 @@ const deleteActionMap = {
   attendance: deleteSubject,
   event: deleteSubject,
   announcement: deleteSubject,
-  // Add other mappings as needed
+  
 };
 
 // USE LAZY LOADING
@@ -38,6 +39,9 @@ const StudentForm = dynamic(() => import("./forms/StudentForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
+const ClassForm = dynamic(() => import("./forms/ClassForm"), {
   loading: () => <h1>Loading...</h1>,
 });
 
@@ -57,14 +61,16 @@ const forms = (
   relatedData?: any,
 ): JSX.Element | null => {
   switch (table) {
-    // case "teacher":
-    //   return <TeacherForm type={type} data={data} setOpen={setOpen} />;
+    case "teacher":
+      return <TeacherForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />;
     // case "student":
-    //   return <StudentForm type={type} data={data} setOpen={setOpen} />;
+    //   return <StudentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />;
     // case "parent":
-    //   return <ParentForm type={type} data={data} setOpen={setOpen} />;
+    //   return <ParentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />;
     case "subject":
       return <SubjectForm type={type} data={data} setOpen={setOpen} relatedData={relatedData}/>;
+    case "class":
+      return <ClassForm type={type} data={data} setOpen={setOpen} relatedData={relatedData}/>;
     default:
       return <p>Form not found!</p>;
   }

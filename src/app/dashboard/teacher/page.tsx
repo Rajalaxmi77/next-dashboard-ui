@@ -4,8 +4,6 @@ import { auth } from "@clerk/nextjs/server";
 
 
 
-
-
 const TeacherPage = async() => {
   const { userId } = await auth();
   return (

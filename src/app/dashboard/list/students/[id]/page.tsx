@@ -1,10 +1,37 @@
 import Announcements from "@/components/Announcements"
 import BigCalendar from "@/components/BigCalender"
 import Performance from "@/components/Performance"
+import StudentAttendanceCard from "@/components/StudentAttendanceCard"
+import prisma from "@/lib/prisma"
+import { auth } from "@clerk/nextjs/server"
+import { Class, Student } from "@prisma/client"
 import Image from "next/image"
 import Link from "next/link"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
-const SingleStudentPage = () => {
+const SingleStudentPage = async({params:{id},
+}:{
+  params:{id:string };
+ }) => {
+  const { sessionClaims } = await auth();
+  const role = (sessionClaims?.metadata as { role?: string })?.role;
+  
+
+  const student: | 
+  (Student & {
+    class: Class & { _count: { lessons: number } };
+  })
+   | null = await prisma.student.findUnique({
+    where:{id},
+    include: {
+      class: { include: { _count: { select: { lessons: true } } } },
+    },
+  });
+  if(!student){
+    return notFound();
+  }
+
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
       {/* LEFT */}
@@ -15,7 +42,7 @@ const SingleStudentPage = () => {
           <div className="bg-kunuSky py-6 px-4 rounded-md flex-1 flex gap-4">
           <div className="w-1/3">
           <Image 
-            src="https://images.pexels.com/photos/5414817/pexels-photo-5414817.jpeg?auto=compress&cs=tinysrgb&w=1200"
+            src={student.img || "/avatar.png"}
             alt=""
             width={144} 
             height={144} 
@@ -23,26 +50,26 @@ const SingleStudentPage = () => {
             />
           </div>
           <div className="w-2/3 flex flex-col justify-between gap-4">
-            <h1 className="text-xl font-semibold">Cameron Moran</h1>
+            <h1 className="text-xl font-semibold">{student.name + " " + student.surname}</h1>
             <p className="text-sm text-gray-500">
                 Lorem ipsum, dolor sit amet consectetur adipisicing elit.
               </p>
             <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium">
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
                   <Image src="/blood.png" alt="" width={14} height={14} />
-                  <span>B+</span>
+                  <span>{student.bloodType}</span>
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
                   <Image src="/date.png" alt="" width={14} height={14} />
-                  <span>January 2025</span>
+                  {new Intl.DateTimeFormat("en-GB").format(student.birthday)}
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
                   <Image src="/mail.png" alt="" width={14} height={14} />
-                  <span>user@gmail.com</span>
+                  <span>{student.email || "-"}</span>
                 </div>
                 <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
                   <Image src="/phone.png" alt="" width={14} height={14} />
-                  <span>+1 234 567</span>
+                  <span>{student.phone || "-"}</span>
                 </div>
               </div>
 
@@ -74,7 +101,7 @@ const SingleStudentPage = () => {
                 className="w-6 h-6"
               />
               <div className="">
-                <h1 className="text-xl font-semibold">6th</h1>
+                <h1 className="text-xl font-semibold">{student.class.name.charAt(0)}th</h1>
                 <span className="text-sm text-gray-400">Grade</span>
               </div>
             </div>
@@ -87,8 +114,11 @@ const SingleStudentPage = () => {
                 height={24}
                 className="w-6 h-6"
               />
+               <Suspense fallback="loading...">
+                <StudentAttendanceCard id={student.id} />
+              </Suspense>
               <div className="">
-                <h1 className="text-xl font-semibold">18</h1>
+                <h1 className="text-xl font-semibold">{student.class._count.lessons}</h1>
                 <span className="text-sm text-gray-400">Lessons</span>
               </div>
             </div>

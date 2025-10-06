@@ -102,7 +102,7 @@ const SubjectForm = ({
                 <option value={teacher.id} key={teacher.id}>
                   {teacher.name + " " + teacher.surname}
                 </option>
-              )
+              ) 
             )}
           </select>
           {errors.teachers?.message && (
