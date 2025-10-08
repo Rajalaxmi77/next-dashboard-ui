@@ -1,4 +1,4 @@
-import FormModal from '@/components/FormModal'
+import FormContainer from '@/components/FormContainer'
 import Pagination from '@/components/Pagination'
 import Table from '@/components/Table'
 import TableSearch from '@/components/TableSearch'
@@ -9,6 +9,7 @@ import { Class, Exam, Prisma, Subject, Teacher } from '@prisma/client'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+// import FormContainer from '@/components/FormContainer'
 
 
 type ExamList = Exam & {lesson:{
@@ -68,8 +69,8 @@ const renderRow = (item: ExamList) =>(
         //   <Image src="/delete.png" alt='' width={16} height={16}></Image>
         // </button>
         <>
-        <FormModal table='exam' type='update' data={item}/>
-        <FormModal table='exam' type='delete' id={item.id}/>
+        <FormContainer table='exam' type='update' data={item}/>
+        <FormContainer table='exam' type='delete' id={item.id}/>
         </>
         )}
       </div>
@@ -166,7 +167,7 @@ prisma.exam.count({where:query}),
             // <button className='w-8 h-8 flex items-center justify-center rounded-full bg-kunuYellow'>
             //   <Image src="/plus.png" alt="" width={14} height={14}/>
             // </button>
-            <FormModal table='exam' type='create'/>
+            <FormContainer table='exam' type='create'/>
             )}
           </div>
         </div>

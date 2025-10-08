@@ -1,5 +1,7 @@
 import prisma from "@/lib/prisma";
 import FormModal from "./FormModal";
+import { currentUserId, role } from "@/lib/utils";
+// import { getCurrentUser } from "@/lib/utils";
 
 export type FormContainerProps={
     table:
@@ -29,6 +31,9 @@ const FormContainer = async({
 
     let relatedData = {}
 
+    // ✅ Fetch current user info from Clerk
+  // const { userId: currentUserId, role } = await getCurrentUser();
+
     if(type!=="delete"){
         switch(table){
             case "subject":
@@ -55,13 +60,41 @@ const FormContainer = async({
             relatedData = { subjects: teacherSubjects };
             break;
 
+            case "student":
+            const studentGrades = await prisma.grade.findMany({
+              select: { id: true, level: true },
+            });
+            const studentClasses = await prisma.class.findMany({
+              include: { _count: { select: { students: true } } },
+            });
+            relatedData = { classes: studentClasses, grades: studentGrades };
+            break;
 
+            case "exam":
+            const examLessons = await prisma.lesson.findMany({
+              where: {
+                ...(role === "teacher" ? { teacherId: currentUserId! } : {}),
+              },
+              select: { id: true, name: true },
+            });
+            relatedData = { lessons: examLessons };
+            break;
+
+          default:
+            break;
 
             }
     }
 
   return (
-    <div className=''><FormModal table={table} type={type} data={data} id={id} relatedData={relatedData} /></div>
+    <div className=''>
+      <FormModal 
+      table={table} 
+      type={type} 
+      data={data} 
+      id={id} 
+      relatedData={relatedData} />
+    </div>
   )
 }
 

@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import ParentForm from "./forms/ParentForm";
 import dynamic from "next/dynamic";
- import {  deleteSubject,deleteClass, deleteTeacher } from "@/lib/action";
+ import {  deleteSubject,deleteClass, deleteTeacher, deleteStudent } from "@/lib/action";
 import { useFormState } from "react-dom";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -15,7 +15,7 @@ const deleteActionMap = {
   subject: deleteSubject,
   class: deleteClass,
   teacher: deleteTeacher,
-  student: deleteSubject,
+  student: deleteStudent,
   parent: deleteSubject,
   lesson: deleteSubject,
   exam: deleteSubject,
@@ -44,6 +44,9 @@ const SubjectForm = dynamic(() => import("./forms/SubjectForm"), {
 const ClassForm = dynamic(() => import("./forms/ClassForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const ExamForm = dynamic(() => import("./forms/ExamForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 // const forms: {
 //   [key: string]: (setOpen:Dispatch<SetStateAction<boolean>>, type: "create" | "update", data?: any,relatedData?:any) => JSX.Element;
@@ -63,14 +66,16 @@ const forms = (
   switch (table) {
     case "teacher":
       return <TeacherForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />;
-    // case "student":
-    //   return <StudentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />;
+    case "student":
+      return <StudentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />;
     // case "parent":
     //   return <ParentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />;
     case "subject":
       return <SubjectForm type={type} data={data} setOpen={setOpen} relatedData={relatedData}/>;
     case "class":
       return <ClassForm type={type} data={data} setOpen={setOpen} relatedData={relatedData}/>;
+    case "exam":
+      return <ExamForm type={type} data={data} setOpen={setOpen} relatedData={relatedData}/>;
     default:
       return <p>Form not found!</p>;
   }
@@ -102,7 +107,7 @@ const FormModal = ({
 
   useEffect(() => {
     if (state.success) {
-      toast(`Subject has been deleted!`);
+      toast(`${table} has been deleted!`);
       setOpen(false);
       router.refresh();
      

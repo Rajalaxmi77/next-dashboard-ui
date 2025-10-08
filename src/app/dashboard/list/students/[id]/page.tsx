@@ -1,4 +1,5 @@
 import Announcements from "@/components/Announcements"
+import BigCalendarContainer from "@/components/BigCalendarContainer"
 import BigCalendar from "@/components/BigCalender"
 import Performance from "@/components/Performance"
 import StudentAttendanceCard from "@/components/StudentAttendanceCard"
@@ -86,10 +87,9 @@ const SingleStudentPage = async({params:{id},
                 height={24}
                 className="w-6 h-6"
               />
-              <div className="">
-                <h1 className="text-xl font-semibold">90%</h1>
-                <span className="text-sm text-gray-400">Attendance</span>
-              </div>
+              <Suspense fallback="loading...">
+                <StudentAttendanceCard id={student.id} />
+              </Suspense>
             </div>
             {/* CARD */}
             <div className="bg-white p-4 rounded-md flex gap-4 w-full md:w-[48%] xl:w-[45%] 2xl:w-[48%]">
@@ -114,9 +114,7 @@ const SingleStudentPage = async({params:{id},
                 height={24}
                 className="w-6 h-6"
               />
-               <Suspense fallback="loading...">
-                <StudentAttendanceCard id={student.id} />
-              </Suspense>
+               
               <div className="">
                 <h1 className="text-xl font-semibold">{student.class._count.lessons}</h1>
                 <span className="text-sm text-gray-400">Lessons</span>
@@ -132,7 +130,7 @@ const SingleStudentPage = async({params:{id},
                 className="w-6 h-6"
               />
               <div className="">
-                <h1 className="text-xl font-semibold">6A</h1>
+                <h1 className="text-xl font-semibold">{student.class.name}</h1>
                 <span className="text-sm text-gray-400">Class</span>
               </div>
             </div>
@@ -141,7 +139,7 @@ const SingleStudentPage = async({params:{id},
         {/* BOTTOM */}
         <div className="mt-4 bg-white rounded-md p-4 h-[800px]">
           <h1>Student&apos;s Schedule</h1>
-          <BigCalendar/>
+          <BigCalendarContainer type="classId" id={student.class.id}/>
           </div>
         </div>
         {/* RIGHT */}
